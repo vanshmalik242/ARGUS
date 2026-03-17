@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARGUS | Advanced OSINT Framework</title>
+  <!-- Google Fonts: Inter & Roboto Mono for premium tech look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Material Icons for sleek ui elements -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dark-theme">
+
+  <!-- AUP Modal -->
+  <div id="aup-modal" class="modal-overlay is-hidden">
+    <div class="modal-content glass-panel" style="max-width: 600px; padding: 2.5rem;">
+      <h2 style="color: var(--accent-secondary); display: flex; align-items: center; gap: 10px;">
+        <span class="material-icons-outlined">gavel</span> Acceptable Use Policy
+      </h2>
+      <div style="margin: 1.5rem 0; font-size: 0.95rem; line-height: 1.6; color: var(--text-muted);">
+        <p style="margin-bottom: 1rem;"><strong>WARNING:</strong> ARGUS is a powerful Open Source Intelligence (OSINT) gathering framework designed for authorized security research, penetration testing, and educational purposes.</p>
+        <p style="margin-bottom: 1rem;">By proceeding, you explicitly agree to the following terms:</p>
+        <ul style="margin-bottom: 1.5rem; padding-left: 1.5rem; list-style-type: square;">
+          <li>You have explicit, written authorization to perform reconnaissance against the target infrastructure.</li>
+          <li>You will not use this tool for malicious purposes, harassment, or unauthorized data exfiltration.</li>
+          <li>You understand that all queries are logged and rate-limited to prevent abuse of the underlying APIs.</li>
+        </ul>
+        <div style="background: rgba(255, 71, 87, 0.1); border-left: 4px solid var(--status-high); padding: 1rem; color: var(--text-main); font-size: 0.85rem;">
+          Any violation of these terms may result in an immediate and permanent IP ban from this hosted instance.
+        </div>
+      </div>
+      <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+        <button id="aup-decline" class="btn-outline">I Decline</button>
+        <button id="aup-accept" class="btn-glow" style="border-color: var(--accent-secondary); color: var(--accent-secondary);">I Agree & Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo-icon"><span class="material-icons-outlined">radar</span></div>
+      <div class="brand-text">ARGUS<span class="version">v2.0</span></div>
+    </div>
+    <div class="nav-section-title">MAIN MENU</div>
+    <nav class="sidebar-nav">
+      <button class="nav-btn active" data-view="scan">
+        <span class="material-icons-outlined">manage_search</span> Reconnaissance
+      </button>
+      <button class="nav-btn" data-view="results">
+        <span class="material-icons-outlined">dashboard</span> Intelligence Hub
+      </button>
+      <button class="nav-btn" data-view="timeline">
+        <span class="material-icons-outlined">timeline</span> Event Timeline
+      </button>
+    </nav>
+    <div class="nav-section-title" style="margin-top: 2rem;">SYSTEM</div>
+    <nav class="sidebar-nav">
+      <button class="nav-btn" data-view="settings">
+        <span class="material-icons-outlined">vpn_key</span> API Configuration
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    
+    <div class="content-wrapper">
+      
+      <!-- SCAN / CONFIGURE VIEW -->
+      <div id="view-scan" class="view active fade-in">
+        <div class="hero-section">
+          <div class="hero-bg"></div>
+          <h1>Target Acquired. Awaiting Command.</h1>
+          <p style="margin-bottom: 2.5rem;">Select reconnaissance modules below to initiate multi-threaded intelligence gathering.</p>
+
+          <div style="display: flex; justify-content: center; gap: 1rem; max-width: 700px; margin: 0 auto 3rem auto;">
+            <div class="topbar-search" style="flex: 1; width: auto; background: var(--bg-surface);">
+              <span class="material-icons-outlined">search</span>
+              <input type="text" id="target-input" placeholder="Enter target domain, email, ip, or username..." autocomplete="off">
+              <div id="target-type-badge" class="target-badge">auto-detect</div>
+            </div>
+            <button id="scan-button" class="btn-glow" style="padding: 0 2rem; font-size: 1rem; white-space: nowrap;">
+              <span class="material-icons-outlined">play_arrow</span> INIT SCAN
+            </button>
+          </div>
+        </div>
+
+        <div class="module-grid">
+          <!-- Modules -->
+          <label class="module-card">
+            <input type="checkbox" checked data-module="whois">
+            <div class="module-card-content">
+              <span class="material-icons-outlined module-icon">fingerprint</span>
+              <h3>WHOIS</h3>
+              <p>Domain registration & IP ownership</p>
+            </div>
+          </label>
+          <label class="module-card">
+            <input type="checkbox" checked data-module="dns">
+            <div class="module-card-content">
+              <span class="material-icons-outlined module-icon">dns</span>
+              <h3>DNS Lookup</h3>
+              <p>Mail servers, TXT records, security flags</p>
+            </div>
+          </label>
+          <label class="module-card">
+            <input type="checkbox" checked data-module="subdomains">
+            <div class="module-card-content">
+              <span class="material-icons-outlined module-icon">account_tree</span>
+              <h3>Subdomains</h3>
+              <p>Brute-force mapping of infrastructure</p>
+            </div>
+          </label>
+          <label class="module-card">
+            <input type="checkbox" checked data-module="social">
+            <div class="module-card-content">
+              <span class="material-icons-outlined module-icon">group_work</span>
+              <h3>Social & GitHub</h3>
+              <p>Profile verification & code scraping</p>
+            </div>
+          </label>
+          <label class="module-card">
+            <input type="checkbox" checked data-module="breach">
+            <div class="module-card-content">
+              <span class="material-icons-outlined module-icon">gpp_maybe</span>
+              <h3>Breach DB</h3>
+              <p>Compromised credentials & pastes</p>
+            </div>
+          </label>
+          <label class="module-card">
+            <input type="checkbox" checked data-module="search">
+            <div class="module-card-content">
+              <span class="material-icons-outlined module-icon">travel_explore</span>
+              <h3>Search Engines</h3>
+              <p>Shodan IoT & Google Dorking</p>
+            </div>
+          </label>
+          <label class="module-card">
+            <input type="checkbox" checked data-module="wayback">
+            <div class="module-card-content">
+              <span class="material-icons-outlined module-icon">history</span>
+              <h3>Wayback Archive</h3>
+              <p>Historical snapshots & timeline data</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Progress Overlay -->
+        <div id="progress-section" class="progress-overlay is-hidden">
+          <div class="progress-card">
+            <div class="progress-header">
+              <span class="material-icons-outlined pulse-icon">leak_add</span>
+              <h3>Scanning <span id="progress-target" class="accent-text"></span></h3>
+            </div>
+            <div class="progress-track">
+              <div id="progress-bar" class="progress-fill"></div>
+            </div>
+            <div class="progress-status">
+              <span id="progress-details">Establishing connection...</span>
+            </div>
+            <div id="progress-modules" class="progress-chips"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS DASHBOARD VIEW -->
+      <div id="view-results" class="view">
+        <div class="dashboard-header">
+          <h2>Intelligence Profile: <span id="results-target-title" class="accent-text"></span></h2>
+          <div class="export-actions">
+            <button id="export-json" class="btn-outline"><span class="material-icons-outlined">data_object</span> JSON</button>
+            <button id="export-csv" class="btn-outline"><span class="material-icons-outlined">table_view</span> CSV</button>
+            <button id="export-print" class="btn-outline"><span class="material-icons-outlined">print</span> Print</button>
+          </div>
+        </div>
+
+        <!-- High Level Summary -->
+        <div id="summary-strip" class="summary-grid">
+          <!-- Filled via JS -->
+        </div>
+
+        <!-- Tabbed Interface -->
+        <div class="results-container glass-panel">
+          <div id="result-tabs" class="tabs-header">
+            <div class="tab active" data-tab="overview"><span class="material-icons-outlined">insights</span> Overview</div>
+            <div class="tab" data-tab="entityMatrix"><span class="material-icons-outlined">grid_on</span> Entity Matrix</div>
+            <div class="tab" data-tab="whois">WHOIS</div>
+            <div class="tab" data-tab="dns">DNS & Subs</div>
+            <div class="tab" data-tab="social">Social/Code</div>
+            <div class="tab" data-tab="breach">Breaches</div>
+            <div class="tab" data-tab="search">Surface Web</div>
+            <div class="tab" data-tab="wayback">Archive</div>
+          </div>
+          <div id="tab-content" class="tab-body scroll-area">
+            <!-- Filled via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TIMELINE VIEW -->
+      <div id="view-timeline" class="view">
+        <h2>Temporal Event Map</h2>
+        <div class="timeline-wrapper glass-panel scroll-area">
+          <div id="timeline-chart" style="height: 150px; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05);"></div>
+          <div id="timeline-list" class="timeline-feed">
+            <p class="text-muted">No temporal events extracted.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS VIEW -->
+      <div id="view-settings" class="view">
+        <h2>System Configuration</h2>
+        <p class="text-muted">Elevate intelligence gathering capabilities with external API keys.</p>
+        
+        <div id="settings-grid" class="settings-grid">
+          <!-- Filled via JS -->
+        </div>
+
+        <button id="save-settings" class="btn-glow" style="margin-top:2rem;">
+          <span class="material-icons-outlined">save</span> COMMIT SETTINGS
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="/js/utils/api.js"></script>
+  <script src="/js/components/searchForm.js"></script>
+  <script src="/js/components/dashboard.js"></script>
+  <script src="/js/components/timeline.js"></script>
+  <script src="/js/components/reportExport.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

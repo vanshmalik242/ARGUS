@@ -1,0 +1,138 @@
+[
+    {
+        "name": "GitHub",
+        "url": "https://github.com/{username}",
+        "category": "development"
+    },
+    {
+        "name": "GitLab",
+        "url": "https://gitlab.com/{username}",
+        "category": "development"
+    },
+    {
+        "name": "Bitbucket",
+        "url": "https://bitbucket.org/{username}",
+        "category": "development"
+    },
+    {
+        "name": "Reddit",
+        "url": "https://www.reddit.com/user/{username}",
+        "category": "social"
+    },
+    {
+        "name": "Medium",
+        "url": "https://medium.com/@{username}",
+        "category": "blog"
+    },
+    {
+        "name": "Dev.to",
+        "url": "https://dev.to/{username}",
+        "category": "development"
+    },
+    {
+        "name": "HackerNews",
+        "url": "https://news.ycombinator.com/user?id={username}",
+        "category": "tech"
+    },
+    {
+        "name": "Stack Overflow",
+        "url": "https://stackoverflow.com/users/{username}",
+        "category": "development",
+        "errorIndicator": "Page Not Found"
+    },
+    {
+        "name": "Pinterest",
+        "url": "https://www.pinterest.com/{username}",
+        "category": "social"
+    },
+    {
+        "name": "Keybase",
+        "url": "https://keybase.io/{username}",
+        "category": "security"
+    },
+    {
+        "name": "HackerOne",
+        "url": "https://hackerone.com/{username}",
+        "category": "security"
+    },
+    {
+        "name": "BugCrowd",
+        "url": "https://bugcrowd.com/{username}",
+        "category": "security"
+    },
+    {
+        "name": "Replit",
+        "url": "https://replit.com/@{username}",
+        "category": "development"
+    },
+    {
+        "name": "NPM",
+        "url": "https://www.npmjs.com/~{username}",
+        "category": "development"
+    },
+    {
+        "name": "PyPI",
+        "url": "https://pypi.org/user/{username}",
+        "category": "development"
+    },
+    {
+        "name": "Docker Hub",
+        "url": "https://hub.docker.com/u/{username}",
+        "category": "development"
+    },
+    {
+        "name": "Gravatar",
+        "url": "https://gravatar.com/{username}",
+        "category": "identity"
+    },
+    {
+        "name": "About.me",
+        "url": "https://about.me/{username}",
+        "category": "identity"
+    },
+    {
+        "name": "Flickr",
+        "url": "https://www.flickr.com/people/{username}",
+        "category": "media"
+    },
+    {
+        "name": "Vimeo",
+        "url": "https://vimeo.com/{username}",
+        "category": "media"
+    },
+    {
+        "name": "SoundCloud",
+        "url": "https://soundcloud.com/{username}",
+        "category": "media"
+    },
+    {
+        "name": "Telegram",
+        "url": "https://t.me/{username}",
+        "category": "messaging"
+    },
+    {
+        "name": "Patreon",
+        "url": "https://www.patreon.com/{username}",
+        "category": "social"
+    },
+    {
+        "name": "Trello",
+        "url": "https://trello.com/{username}",
+        "category": "productivity"
+    },
+    {
+        "name": "CodePen",
+        "url": "https://codepen.io/{username}",
+        "category": "development"
+    },
+    {
+        "name": "Dribbble",
+        "url": "https://dribbble.com/{username}",
+        "category": "design"
+    },
+    {
+        "name": "Behance",
+        "url": "https://www.behance.net/{username}",
+        "category": "design"
+    }
+]
