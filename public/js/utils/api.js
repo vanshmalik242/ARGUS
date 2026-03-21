@@ -10,11 +10,19 @@ const api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
+        if (res.status === 401) {
+            document.getElementById('login-modal').classList.remove('is-hidden');
+            throw new Error('Authentication required');
+        }
         return res.json();
     },
 
     async get(endpoint) {
         const res = await fetch(`${API_BASE}${endpoint}`);
+        if (res.status === 401) {
+            document.getElementById('login-modal').classList.remove('is-hidden');
+            throw new Error('Authentication required');
+        }
         return res.json();
     },
 

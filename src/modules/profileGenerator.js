@@ -68,6 +68,21 @@ function generateProfile(target, targetType, moduleResults) {
         processTechForProfile(profile, moduleResults.tech);
     }
 
+    // Process DMARC data
+    if (moduleResults.dmarc) {
+        processDmarcForProfile(profile, moduleResults.dmarc);
+    }
+
+    // Process Ports data
+    if (moduleResults.ports) {
+        processPortsForProfile(profile, moduleResults.ports);
+    }
+
+    // Process Takeover data
+    if (moduleResults.takeover) {
+        processTakeoverForProfile(profile, moduleResults.takeover);
+    }
+
     // Calculate risk score
     profile.riskScore = calculateRiskScore(profile.riskFactors);
 
@@ -369,6 +384,35 @@ function processTechForProfile(profile, techData) {
     if (techData.detected) {
         techData.detected.forEach(tech => {
             profile.entities.push({ type: 'technology', value: tech.name, source: 'Tech Detection', category: tech.category });
+        });
+    }
+}
+
+function processDmarcForProfile(profile, dmarcData) {
+    if (dmarcData.grade === 'F') {
+        profile.riskFactors.push({ factor: 'Email Spoofing Vulnerability', severity: 'high', description: 'Domain lacks strict SPF or DMARC reject/quarantine policies.' });
+    }
+}
+
+function processPortsForProfile(profile, portData) {
+    if (portData.openPorts) {
+        portData.openPorts.forEach(port => {
+            profile.entities.push({ type: 'service', value: `Port ${port.port} (${port.service})`, source: 'Port Scanner' });
+        });
+    }
+    if (portData.vulnerable) {
+        profile.riskFactors.push({ factor: 'Critical Port Exposed', severity: 'critical', description: portData.warning });
+    }
+}
+
+function processTakeoverForProfile(profile, takeoverData) {
+    if (takeoverData.vulnerableSubdomains && takeoverData.vulnerableSubdomains.length > 0) {
+        takeoverData.vulnerableSubdomains.forEach(vuln => {
+            profile.riskFactors.push({ 
+                factor: 'Subdomain Takeover', 
+                severity: 'critical', 
+                description: `Subdomain ${vuln.subdomain} points to unclaimed ${vuln.service} CNAME (${vuln.cname})` 
+            });
         });
     }
 }

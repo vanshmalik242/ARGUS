@@ -75,6 +75,9 @@ const Dashboard = {
       case 'ssl': container.innerHTML = this.renderSSL(results.ssl); break;
       case 'headers': container.innerHTML = this.renderHeaders(results.headers); break;
       case 'tech': container.innerHTML = this.renderTech(results.tech); break;
+      case 'dmarc': container.innerHTML = this.renderDmarc(results.dmarc); break;
+      case 'ports': container.innerHTML = this.renderPorts(results.ports); break;
+      case 'takeover': container.innerHTML = this.renderTakeover(results.takeover); break;
       default: container.innerHTML = '<p class="text-muted">No data available.</p>';
     }
   },
@@ -490,6 +493,135 @@ const Dashboard = {
         </div>`;
     });
     html += `</div>`;
+
+    return html;
+  },
+
+  renderDmarc(data) {
+    if (!data || !data.spf && !data.dmarc) return '<p class="text-muted">No DMARC or SPF data available.</p>';
+
+    let html = `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 2rem;">
+      <div>
+        <h3>Email Security Auditor</h3>
+        <p class="text-muted">Analysis of SPF and DMARC configurations protecting against spoofing.</p>
+      </div>
+      <div style="text-align:center;">
+        <div class="grade-badge grade-${data.grade}">${data.grade}</div>
+      </div>
+    </div>`;
+
+    html += `<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2rem;">`;
+
+    // SPF Card
+    const spfColor = data.spf?.strict ? 'var(--status-low)' : (data.spf?.present ? 'var(--status-medium)' : 'var(--status-high)');
+    html += `<div class="glass-panel" style="padding: 1.5rem; border-left: 4px solid ${spfColor}">
+        <h4 style="margin-bottom: 1rem; display:flex; align-items:center; gap:8px;">
+            <span class="material-icons-outlined" style="color:${spfColor}">${data.spf?.present ? 'check_circle' : 'error'}</span> SPF Record
+        </h4>
+        <div class="mono" style="background:var(--bg-base); padding:10px; border-radius:6px; margin-bottom:1rem; word-break:break-all; font-size:0.85rem; color:var(--text-muted);">
+            ${data.spf?.record || 'N/A'}
+        </div>
+        <div>Strict Policy (Reject/HardFail): <span style="font-weight:bold; color:${spfColor}">${data.spf?.strict ? 'YES' : 'NO'}</span></div>
+    </div>`;
+
+    // DMARC Card
+    const dmarcColor = data.dmarc?.policy === 'reject' || data.dmarc?.policy === 'quarantine' ? 'var(--status-low)' : (data.dmarc?.present ? 'var(--status-medium)' : 'var(--status-high)');
+    html += `<div class="glass-panel" style="padding: 1.5rem; border-left: 4px solid ${dmarcColor}">
+        <h4 style="margin-bottom: 1rem; display:flex; align-items:center; gap:8px;">
+            <span class="material-icons-outlined" style="color:${dmarcColor}">${data.dmarc?.present ? 'check_circle' : 'error'}</span> DMARC Record
+        </h4>
+        <div class="mono" style="background:var(--bg-base); padding:10px; border-radius:6px; margin-bottom:1rem; word-break:break-all; font-size:0.85rem; color:var(--text-muted);">
+            ${data.dmarc?.record || 'N/A'}
+        </div>
+        <div>Enforcement Policy: <span style="font-weight:bold; color:${dmarcColor}; text-transform:uppercase;">${data.dmarc?.policy || 'NONE'}</span></div>
+    </div>`;
+
+    html += `</div>`;
+    
+    if (data.spoofable) {
+        html += `<div style="margin-top:2rem; padding:1.5rem; background:rgba(255,71,87,0.1); border:1px solid var(--status-high); border-radius:8px;">
+            <h4 style="color:var(--status-high); margin-bottom:0.5rem; display:flex; align-items:center; gap:8px;">
+                <span class="material-icons-outlined">gpp_bad</span> Susceptible to Spoofing
+            </h4>
+            <p style="font-size:0.9rem;">This domain does not enforce a strict SPF/DMARC policy. Attackers can likely send emails impersonating this domain, leading to high-impact phishing campaigns.</p>
+        </div>`;
+    }
+
+    return html;
+  },
+
+  renderPorts(data) {
+    if (!data || !data.openPorts) return '<p class="text-muted">Port scan data not available or failed.</p>';
+    if (data.openPorts.length === 0) return `<p class="text-muted">Scanned ${data.totalScanned} critical ports. 0 exposed services discovered.</p>`;
+
+    let html = `<div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:2rem;">
+        <div>
+            <h3>Exposed TCP Services</h3>
+            <p class="text-muted">Active asynchronous TCP connect scan across ${data.totalScanned} top attack surface ports.</p>
+        </div>
+        <div style="text-align:right;">
+            <div class="summary-value" style="color:var(--status-high); font-size:2.5rem;">${data.openPorts.length}</div>
+            <div class="text-muted text-uppercase" style="font-size:0.75rem;">Open Ports</div>
+        </div>
+    </div>`;
+
+    if (data.vulnerable) {
+        html += `<div style="padding:1rem; background:rgba(255,71,87,0.1); border-left:4px solid var(--status-high); border-radius:6px; margin-bottom:2rem; font-size:0.9rem;">
+            <span class="material-icons-outlined" style="color:var(--status-high); vertical-align:middle;">warning</span>
+            <strong style="color:var(--status-high)">Critical Vulnerability:</strong> ${data.warning}
+        </div>`;
+    }
+
+    html += `<table class="data-table"><thead><tr><th style="width:100px;">Port</th><th>Service Identity</th><th>Status</th></tr></thead><tbody>`;
+    data.openPorts.forEach(p => {
+        html += `<tr>
+            <td><span class="entity-badge entity-ip" style="background:var(--bg-surface-elevated); border:1px solid var(--border-light)">${p.port}/tcp</span></td>
+            <td class="mono" style="color:var(--text-main);">${p.service}</td>
+            <td style="color:var(--status-low);"><span class="material-icons-outlined" style="font-size:16px; vertical-align:middle;">wifi_tethering</span> OPEN</td>
+        </tr>`;
+    });
+    html += `</tbody></table>`;
+
+    return html;
+  },
+
+  renderTakeover(data) {
+    if (!data) return '<p class="text-muted">Takeover module did not execute successfully.</p>';
+    if (data.message) return `<p class="text-muted">${data.message}</p>`;
+
+    let html = `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 2rem;">
+      <div>
+        <h3>Subdomain Takeover Analysis</h3>
+        <p class="text-muted">Auditing ${data.analyzedCount} subdomains for dangling CNAME records pointing to unclaimed cloud services.</p>
+      </div>
+      <div style="text-align:center;">
+        <div class="grade-badge grade-${data.grade}">${data.grade}</div>
+      </div>
+    </div>`;
+
+    if (data.vulnerableSubdomains && data.vulnerableSubdomains.length > 0) {
+        html += `<div style="margin-bottom:1.5rem; padding:1rem; background:rgba(255,71,87,0.1); border:1px solid var(--status-high); border-radius:6px;">
+            <h4 style="color:var(--status-high); margin-bottom:0.5rem;"><span class="material-icons-outlined" style="vertical-align:middle;">bug_report</span> High Risk: Vulnerable Subdomains Discovered</h4>
+            <p style="font-size:0.85rem;">The following subdomains point to third-party services that may have been un-registered or disabled. Attackers can claim these services to hijack the subdomain.</p>
+        </div>`;
+
+        html += `<table class="data-table"><thead><tr><th>Subdomain</th><th>Dangling CNAME</th><th>Target Service Provider</th><th>Risk</th></tr></thead><tbody>`;
+        data.vulnerableSubdomains.forEach(v => {
+            html += `<tr>
+                <td class="mono" style="color:var(--accent-primary);">${v.subdomain}</td>
+                <td class="mono text-muted">${v.cname}</td>
+                <td><span class="entity-badge entity-domain">${v.service}</span></td>
+                <td style="color:var(--status-high); font-weight:bold;">${v.risk}</td>
+            </tr>`;
+        });
+        html += `</tbody></table>`;
+    } else {
+        html += `<div style="text-align:center; padding:3rem 1rem; border:1px dashed var(--border-light); border-radius:8px;">
+            <span class="material-icons-outlined" style="font-size:3rem; color:var(--status-low); margin-bottom:1rem;">security</span>
+            <h4 style="color:var(--text-main);">No Takeover Vectors Found</h4>
+            <p class="text-muted" style="font-size:0.9rem; max-width:400px; margin:0 auto;">All analyzed CNAME records appear to securely mapped, or do not point to known vulnerable cloud providers.</p>
+        </div>`;
+    }
 
     return html;
   },

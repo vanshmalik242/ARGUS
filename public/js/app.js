@@ -11,6 +11,11 @@ const App = {
         SearchForm.init();
         ReportExport.init();
         if (window.ScanHistory) ScanHistory.init();
+        if (window.ParticleCanvas) ParticleCanvas.init();
+
+        // Authentication Flow
+        this.initAuth();
+        this.checkAuth();
 
         // Navigation
         document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -25,6 +30,56 @@ const App = {
 
         // Restore last scan from localStorage
         this.restoreLastScan();
+    },
+
+    initAuth() {
+        const loginBtn = document.getElementById('login-btn');
+        const loginPhrase = document.getElementById('login-phrase');
+        const errorDiv = document.getElementById('login-error');
+
+        if (!loginBtn || !loginPhrase) return;
+
+        const attemptLogin = async () => {
+            loginBtn.textContent = 'CHECKING...';
+            errorDiv.textContent = '';
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phrase: loginPhrase.value })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('login-modal').classList.add('is-hidden');
+                    loginPhrase.value = '';
+                } else {
+                    errorDiv.textContent = data.message || 'Authentication failed';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Network error during authentication';
+            } finally {
+                loginBtn.textContent = 'AUTHENTICATE';
+            }
+        };
+
+        loginBtn.addEventListener('click', attemptLogin);
+        loginPhrase.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') attemptLogin();
+        });
+    },
+
+    async checkAuth() {
+        try {
+            const res = await fetch('/api/auth/verify');
+            if (res.status !== 200 && res.status !== 304) {
+                document.getElementById('login-modal').classList.remove('is-hidden');
+            } else {
+                document.getElementById('login-modal').classList.add('is-hidden');
+            }
+        } catch (e) {
+            document.getElementById('login-modal').classList.remove('is-hidden');
+        }
     },
 
     showView(viewName) {

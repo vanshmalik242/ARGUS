@@ -11,8 +11,13 @@ const { getSnapshots, checkAvailability } = require('../modules/waybackModule');
 const { analyzeCertificate } = require('../modules/sslModule');
 const { auditHeaders } = require('../modules/headersModule');
 const { detectTech } = require('../modules/techDetectModule');
+const { analyzeEmailSecurity } = require('../modules/dmarcModule');
+const { scanPorts } = require('../modules/portScannerModule');
+const { checkTakeoverStatus } = require('../modules/takeoverModule');
 const { generateProfile } = require('../modules/profileGenerator');
 const NodeCache = require('node-cache');
+
+const { body, validationResult } = require('express-validator');
 
 // Initialize cache (stdTTL: 24 hours in seconds, checkperiod: 1 hour)
 const scanCache = new NodeCache({ stdTTL: 86400, checkperiod: 3600 });
@@ -23,12 +28,18 @@ const scans = new Map();
 /**
  * POST /api/scan — Start a new scan
  */
-router.post('/', async (req, res) => {
-    const { target, type, modules } = req.body;
-
-    if (!target) {
-        return res.status(400).json({ error: 'Target is required' });
+router.post('/', [
+    body('target')
+        .trim()
+        .notEmpty().withMessage('Target is required')
+        .matches(/^[a-zA-Z0-9.-@_]+$/).withMessage('Invalid target format. No special characters allowed.')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ error: errors.array()[0].msg });
     }
+
+    const { target, type, modules } = req.body;
 
     const targetType = type || detectTargetType(target);
     const enabledModules = modules || getDefaultModules(targetType);
@@ -318,6 +329,33 @@ async function runScan(scan) {
             }
             updateProgress();
         },
+        dmarc: async () => {
+            try {
+                if (scan.targetType === 'domain') {
+                    scan.results.dmarc = await analyzeEmailSecurity(scan.target);
+                } else {
+                    scan.results.dmarc = { message: 'DMARC analysis requires a domain target' };
+                }
+            } catch (err) {
+                scan.errors.dmarc = err.message;
+            }
+            updateProgress();
+        },
+        ports: async () => {
+            try {
+                if (scan.targetType === 'domain' || scan.targetType === 'ip') {
+                    scan.results.ports = await scanPorts(scan.target);
+                } else {
+                    scan.results.ports = { message: 'Port scanning requires an IP or domain target' };
+                }
+            } catch (err) {
+                scan.errors.ports = err.message;
+            }
+            updateProgress();
+        },
+        takeover: async () => {
+            // Placeholder: Takeover runs after Promise.all because it requires subdomain results
+        }
     };
 
     // Execute all enabled modules in parallel
@@ -326,6 +364,20 @@ async function runScan(scan) {
         .map(m => moduleMap[m]());
 
     await Promise.all(promises);
+
+    // Run Takeover sequentially if enabled, since it depends on Subdomains
+    if (scan.enabledModules.includes('takeover')) {
+        try {
+            if (scan.results.subdomains && scan.results.subdomains.found) {
+                scan.results.takeover = await checkTakeoverStatus(scan.results.subdomains.found);
+            } else {
+                scan.results.takeover = { message: 'Takeover analysis requires subdomain enumeration results' };
+            }
+        } catch (err) {
+            scan.errors.takeover = err.message;
+        }
+        updateProgress();
+    }
 
     // Generate unified profile
     try {
@@ -353,7 +405,7 @@ function detectTargetType(target) {
 
 function getDefaultModules(targetType) {
     switch (targetType) {
-        case 'domain': return ['whois', 'dns', 'subdomains', 'ssl', 'headers', 'tech', 'search', 'wayback', 'social'];
+        case 'domain': return ['whois', 'dns', 'subdomains', 'ssl', 'headers', 'tech', 'search', 'wayback', 'social', 'dmarc', 'ports', 'takeover'];
         case 'email': return ['breach', 'social', 'search'];
         case 'ip': return ['whois', 'search'];
         case 'username': return ['social'];
