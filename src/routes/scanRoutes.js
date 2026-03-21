@@ -8,6 +8,9 @@ const { searchGitHub, checkSocialProfiles, extractGitHubSecrets } = require('../
 const { checkBreaches, checkPastes } = require('../modules/breachModule');
 const { googleSearch, shodanDomainLookup, searchEmails } = require('../modules/searchModule');
 const { getSnapshots, checkAvailability } = require('../modules/waybackModule');
+const { analyzeCertificate } = require('../modules/sslModule');
+const { auditHeaders } = require('../modules/headersModule');
+const { detectTech } = require('../modules/techDetectModule');
 const { generateProfile } = require('../modules/profileGenerator');
 const NodeCache = require('node-cache');
 
@@ -279,6 +282,42 @@ async function runScan(scan) {
             }
             updateProgress();
         },
+        ssl: async () => {
+            try {
+                if (scan.targetType === 'domain') {
+                    scan.results.ssl = await analyzeCertificate(scan.target);
+                } else {
+                    scan.results.ssl = { message: 'SSL analysis requires a domain target' };
+                }
+            } catch (err) {
+                scan.errors.ssl = err.message;
+            }
+            updateProgress();
+        },
+        headers: async () => {
+            try {
+                if (scan.targetType === 'domain') {
+                    scan.results.headers = await auditHeaders(scan.target);
+                } else {
+                    scan.results.headers = { message: 'Header audit requires a domain target' };
+                }
+            } catch (err) {
+                scan.errors.headers = err.message;
+            }
+            updateProgress();
+        },
+        tech: async () => {
+            try {
+                if (scan.targetType === 'domain') {
+                    scan.results.tech = await detectTech(scan.target);
+                } else {
+                    scan.results.tech = { message: 'Tech detection requires a domain target' };
+                }
+            } catch (err) {
+                scan.errors.tech = err.message;
+            }
+            updateProgress();
+        },
     };
 
     // Execute all enabled modules in parallel
@@ -314,7 +353,7 @@ function detectTargetType(target) {
 
 function getDefaultModules(targetType) {
     switch (targetType) {
-        case 'domain': return ['whois', 'dns', 'subdomains', 'search', 'wayback', 'social'];
+        case 'domain': return ['whois', 'dns', 'subdomains', 'ssl', 'headers', 'tech', 'search', 'wayback', 'social'];
         case 'email': return ['breach', 'social', 'search'];
         case 'ip': return ['whois', 'search'];
         case 'username': return ['social'];

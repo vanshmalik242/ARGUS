@@ -687,31 +687,150 @@ h2 {
   background: var(--text-muted); 
 }
 
-/* Utilities */
-.hidden {
-  display: none !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
+/* History List */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-/* Modals */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(10, 14, 23, 0.9);
-  backdrop-filter: blur(10px);
+.history-item {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 2rem;
+  transition: all 0.3s;
+}
+
+.history-item:hover {
+  border-color: var(--accent-primary);
+  transform: translateX(5px);
+}
+
+.history-target {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.history-meta {
+  display: flex;
+  gap: 1rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.history-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Grading Badges */
+.grade-badge {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  transition: opacity 0.3s ease;
+  font-weight: 800;
+  font-size: 1.2rem;
+  border: 2px solid currentColor;
+}
+
+.grade-A { color: var(--status-low); background: rgba(46, 213, 115, 0.1); }
+.grade-B { color: #8A2BE2; background: rgba(138, 43, 226, 0.1); }
+.grade-C { color: #ffa502; background: rgba(255, 165, 2, 0.1); }
+.grade-D { color: #ff7f50; background: rgba(255, 127, 80, 0.1); }
+.grade-F { color: var(--status-high); background: rgba(255, 71, 87, 0.1); }
+
+/* Technology Cards */
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.tech-tag {
+  background: var(--bg-base);
+  border: 1px solid var(--border-light);
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tech-name { font-weight: 600; }
+.tech-cat { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+
+/* Network Map (SVG) */
+.network-map-container {
+  width: 100%;
+  height: 600px;
+  background: var(--bg-base);
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.node { cursor: pointer; transition: filter 0.2s; }
+.node:hover { filter: brightness(1.3); }
+.link { stroke: var(--border-light); stroke-opacity: 0.4; }
+.node-label { fill: var(--text-main); font-size: 12px; font-family: var(--font-mono); pointer-events: none; }
+
+/* Security Gauges */
+.gauge-container {
+  display: flex;
+  gap: 3rem;
+  margin-bottom: 2rem;
+}
+
+.gauge-card {
+  flex: 1;
+  background: var(--bg-base);
+  border: 1px solid var(--border-light);
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.header-check-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.header-check-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+.check-pass { color: var(--status-low); }
+.check-fail { color: var(--status-high); }
+
+/* Comparison View */
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.comparison-col h4 { margin-bottom: 1rem; color: var(--text-muted); }
+
+/* Utilities */
+.hidden {
+  display: none !important;
 }
 
 .modal-overlay.is-hidden {
   display: none;
-}
-
-.modal-content {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--border-glow);
 }

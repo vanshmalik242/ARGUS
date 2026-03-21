@@ -56,6 +56,9 @@
       <button class="nav-btn" data-view="timeline">
         <span class="material-icons-outlined">timeline</span> Event Timeline
       </button>
+      <button class="nav-btn" data-view="history">
+        <span class="material-icons-outlined">history</span> Scan History
+      </button>
     </nav>
     <div class="nav-section-title" style="margin-top: 2rem;">SYSTEM</div>
     <nav class="sidebar-nav">
@@ -147,6 +150,30 @@
               <p>Historical snapshots & timeline data</p>
             </div>
           </label>
+          <label class="module-card">
+            <input type="checkbox" checked data-module="ssl">
+            <div class="module-card-content">
+              <span class="material-icons-outlined module-icon">lock</span>
+              <h3>SSL/TLS Analyzer</h3>
+              <p>Certificate chain & cipher audit</p>
+            </div>
+          </label>
+          <label class="module-card">
+            <input type="checkbox" checked data-module="headers">
+            <div class="module-card-content">
+              <span class="material-icons-outlined module-icon">security</span>
+              <h3>Security Headers</h3>
+              <p>HSTS, CSP, X-Frame audit & scoring</p>
+            </div>
+          </label>
+          <label class="module-card">
+            <input type="checkbox" checked data-module="tech">
+            <div class="module-card-content">
+              <span class="material-icons-outlined module-icon">device_hub</span>
+              <h3>Tech Stack</h3>
+              <p>CMS, frameworks, CDN fingerprinting</p>
+            </div>
+          </label>
         </div>
 
         <!-- Progress Overlay -->
@@ -187,7 +214,11 @@
         <div class="results-container glass-panel">
           <div id="result-tabs" class="tabs-header">
             <div class="tab active" data-tab="overview"><span class="material-icons-outlined">insights</span> Overview</div>
+            <div class="tab" data-tab="networkMap"><span class="material-icons-outlined">hub</span> Network Map</div>
             <div class="tab" data-tab="entityMatrix"><span class="material-icons-outlined">grid_on</span> Entity Matrix</div>
+            <div class="tab" data-tab="ssl"><span class="material-icons-outlined">lock</span> SSL/TLS</div>
+            <div class="tab" data-tab="headers"><span class="material-icons-outlined">security</span> Headers</div>
+            <div class="tab" data-tab="tech"><span class="material-icons-outlined">device_hub</span> Tech Stack</div>
             <div class="tab" data-tab="whois">WHOIS</div>
             <div class="tab" data-tab="dns">DNS & Subs</div>
             <div class="tab" data-tab="social">Social/Code</div>
@@ -212,6 +243,17 @@
         </div>
       </div>
 
+      <!-- SCAN HISTORY VIEW -->
+      <div id="view-history" class="view">
+        <div class="dashboard-header">
+          <h2><span class="material-icons-outlined" style="vertical-align:middle;margin-right:8px">history</span>Scan History</h2>
+          <button id="clear-history" class="btn-outline"><span class="material-icons-outlined">delete_sweep</span> Clear All</button>
+        </div>
+        <div id="history-list" class="history-list">
+          <!-- Filled via JS -->
+        </div>
+      </div>
+
       <!-- SETTINGS VIEW -->
       <div id="view-settings" class="view">
         <h2>System Configuration</h2>
@@ -233,6 +275,8 @@
   <script src="/js/components/searchForm.js"></script>
   <script src="/js/components/dashboard.js"></script>
   <script src="/js/components/timeline.js"></script>
+  <script src="/js/components/networkMap.js"></script>
+  <script src="/js/components/scanHistory.js"></script>
   <script src="/js/components/reportExport.js"></script>
   <script src="/js/app.js"></script>
 </body>

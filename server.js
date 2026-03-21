@@ -4,8 +4,11 @@ const cors = require('cors');
 const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const scanRoutes = require('./src/routes/scanRoutes');
 const settingsRoutes = require('./src/routes/settingsRoutes');
+const authRoutes = require('./src/routes/authRoutes');
+const { requireAuth } = require('./src/middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +19,7 @@ app.use(helmet({
 }));
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 // Rate Limiting (100 requests per 15 minutes)
 const limiter = rateLimit({
@@ -27,12 +31,15 @@ app.use('/api', limiter);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API Routes
-app.use('/api/scan', scanRoutes);
-app.use('/api/settings', settingsRoutes);
+// Public Auth Routes
+app.use('/api/auth', authRoutes);
+
+// Protected API Routes
+app.use('/api/scan', requireAuth, scanRoutes);
+app.use('/api/settings', requireAuth, settingsRoutes);
 
 // SPA fallback
-app.get('/{path}', (req, res) => {
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

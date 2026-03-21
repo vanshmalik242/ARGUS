@@ -68,6 +68,13 @@ const Dashboard = {
       case 'breach': container.innerHTML = this.renderBreach(results.breach, results.pastes); break;
       case 'search': container.innerHTML = this.renderSearch(results.search); break;
       case 'wayback': container.innerHTML = this.renderWayback(results.wayback); break;
+      case 'networkMap': 
+        if (window.NetworkMap) NetworkMap.render(r); 
+        else container.innerHTML = '<p class="text-muted">Network Map component not loaded.</p>';
+        break;
+      case 'ssl': container.innerHTML = this.renderSSL(results.ssl); break;
+      case 'headers': container.innerHTML = this.renderHeaders(results.headers); break;
+      case 'tech': container.innerHTML = this.renderTech(results.tech); break;
       default: container.innerHTML = '<p class="text-muted">No data available.</p>';
     }
   },
@@ -374,6 +381,115 @@ const Dashboard = {
       });
       html += '</tbody></table>';
     }
+
+    return html;
+  },
+
+  renderSSL(data) {
+    if (!data || !data.valid) return '<p class="text-muted">No SSL/TLS data found or target does not support HTTPS.</p>';
+    
+    let html = `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 2rem;">
+      <div>
+        <h3>SSL/TLS Certificate Analysis</h3>
+        <p class="text-muted">Validation of cryptographic identity and connection security.</p>
+      </div>
+      <div style="text-align:center;">
+        <div class="grade-badge grade-${data.grade}">${data.grade}</div>
+      </div>
+    </div>`;
+
+    html += `<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+      <div class="glass-panel" style="padding: 1.5rem;">
+        <h4 style="margin-bottom: 1rem;">Certificate Details</h4>
+        <table style="width:100%; text-align:left; font-size:0.9rem;">
+          <tr><th style="padding-bottom:10px; color:var(--text-muted)">Subject</th><td style="padding-bottom:10px;" class="mono" style="color:var(--text-main)">${data.certificate?.subject || 'N/A'}</td></tr>
+          <tr><th style="padding-bottom:10px; color:var(--text-muted)">Issuer</th><td style="padding-bottom:10px;" class="mono" style="color:var(--text-main)">${data.certificate?.issuer || 'N/A'}</td></tr>
+          <tr><th style="padding-bottom:10px; color:var(--text-muted)">Valid From</th><td style="padding-bottom:10px;" class="mono">${data.certificate?.validFrom || 'N/A'}</td></tr>
+          <tr><th style="padding-bottom:10px; color:var(--text-muted)">Valid To</th><td style="padding-bottom:10px;" class="mono">${data.certificate?.validTo || 'N/A'}</td></tr>
+        </table>
+      </div>
+      <div>
+        <h4 style="margin-bottom: 1rem;">Security Checks</h4>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">`;
+    
+    if (data.checks && data.checks.length > 0) {
+        data.checks.forEach(c => {
+            const icon = c.pass ? 'check_circle' : 'error';
+            const color = c.pass ? 'var(--status-low)' : 'var(--status-high)';
+            html += `<div style="background:var(--bg-surface-elevated); padding: 0.75rem; border-radius: 6px; display:flex; gap:10px; align-items:center;">
+                <span class="material-icons-outlined" style="color:${color}">${icon}</span>
+                <div>
+                   <div style="font-weight:600; font-size:0.9rem;">${c.name}</div>
+                   <div style="font-size:0.8rem; color:var(--text-muted);">${c.detail}</div>
+                </div>
+            </div>`;
+        });
+    }
+
+    html += `</div></div></div>`;
+    return html;
+  },
+
+  renderHeaders(data) {
+    if (!data || !data.checks) return '<p class="text-muted">No Security Headers data found.</p>';
+    
+    let html = `<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 2rem;">
+      <div>
+        <h3>HTTP Security Headers</h3>
+        <p class="text-muted">Analysis of web application defensive posture.</p>
+      </div>
+      <div style="text-align:center;">
+         <div class="grade-badge grade-${data.grade.charAt(0)}">${data.grade}</div>
+         <div style="margin-top:5px; font-size:0.8rem; font-family:var(--font-mono); color:var(--text-muted)">Score: ${data.score}/100</div>
+      </div>
+    </div>`;
+
+    html += `<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">`;
+    
+    data.checks.forEach(c => {
+        if(c.info) return; // Skip info check for main layout
+        const icon = c.present ? 'check_circle' : 'warning';
+        const color = c.present ? 'var(--status-low)' : 'var(--status-high)';
+        html += `<div class="glass-panel" style="padding: 1rem; border-left: 4px solid ${color}">
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:0.5rem;">
+                <span class="material-icons-outlined" style="color:${color}; font-size:18px;">${icon}</span>
+                <span style="font-weight:600; font-family:var(--font-mono); font-size:0.9rem;">${c.name}</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.8rem;">${c.description}</div>
+            ${!c.present && c.remediation ? `<div style="background:rgba(255,127,80,0.1); padding:0.5rem; border-radius:4px; font-size:0.8rem; font-family:var(--font-mono); color:#ff7f50;">Fix: ${c.remediation}</div>` : ''}
+            ${c.present ? `<div style="font-size:0.8rem; font-family:var(--font-mono); color:var(--accent-primary); word-break:break-all;">${c.value}</div>` : ''}
+        </div>`;
+    });
+
+    html += `</div>`;
+    return html;
+  },
+
+  renderTech(data) {
+    if (!data || !data.detected || data.detected.length === 0) return '<p class="text-muted">No distinct technology stack fingerprints detected.</p>';
+    
+    let html = `<div style="margin-bottom: 2rem;">
+      <h3>Technology Stack Fingerprint</h3>
+      <p class="text-muted">Identified frameworks, servers, CMS, and infrastructure components.</p>
+    </div>`;
+
+    html += `<div class="tech-grid">`;
+    data.detected.forEach(t => {
+        let icon = 'memory';
+        if (t.category.includes('CMS')) icon = 'dashboard';
+        if (t.category.includes('Server')) icon = 'dns';
+        if (t.category.includes('Analytics')) icon = 'insights';
+        if (t.category.includes('CDN')) icon = 'cloud';
+        
+        html += `<div class="tech-tag">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span class="material-icons-outlined" style="color:var(--accent-primary); font-size:18px;">${icon}</span>
+                <span class="tech-name">${t.name}</span>
+            </div>
+            <span class="tech-cat">${t.category}</span>
+        </div>`;
+    });
+    html += `</div>`;
 
     return html;
   },

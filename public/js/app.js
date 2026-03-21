@@ -10,6 +10,7 @@ const App = {
         // Initialize all components
         SearchForm.init();
         ReportExport.init();
+        if (window.ScanHistory) ScanHistory.init();
 
         // Navigation
         document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -48,6 +49,10 @@ const App = {
         if (viewName === 'timeline' && this.currentReport) {
             Timeline.render(this.currentReport);
         }
+
+        if (viewName === 'history' && window.ScanHistory) {
+            ScanHistory.render();
+        }
     },
 
     /** Save the last scan report to localStorage */
@@ -55,6 +60,7 @@ const App = {
         this.currentReport = report;
         try {
             localStorage.setItem('argus_last_report', JSON.stringify(report));
+            if (window.ScanHistory) ScanHistory.save(report);
         } catch (e) {
             console.warn('Could not save scan to localStorage:', e);
         }

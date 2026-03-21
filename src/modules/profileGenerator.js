@@ -53,6 +53,21 @@ function generateProfile(target, targetType, moduleResults) {
         processWaybackForProfile(profile, moduleResults.wayback);
     }
 
+    // Process SSL data
+    if (moduleResults.ssl) {
+        processSSLForProfile(profile, moduleResults.ssl);
+    }
+
+    // Process Headers data
+    if (moduleResults.headers) {
+        processHeadersForProfile(profile, moduleResults.headers);
+    }
+
+    // Process Tech data
+    if (moduleResults.tech) {
+        processTechForProfile(profile, moduleResults.tech);
+    }
+
     // Calculate risk score
     profile.riskScore = calculateRiskScore(profile.riskFactors);
 
@@ -299,6 +314,63 @@ function generateSummary(profile) {
         riskLevel: profile.riskScore >= 60 ? 'Critical' : profile.riskScore >= 40 ? 'High' : profile.riskScore >= 20 ? 'Medium' : 'Low',
         totalRiskFactors: profile.riskFactors.length,
     };
+}
+
+function processSSLForProfile(profile, sslData) {
+    if (sslData.certificate) {
+        const cert = sslData.certificate;
+        profile.entities.push({ type: 'certificate', value: cert.subject, source: 'SSL/TLS', issuer: cert.issuerOrg || cert.issuer });
+
+        if (cert.validTo) {
+            profile.timeline.push({ date: cert.validTo, event: 'SSL Certificate Expires', source: 'SSL/TLS', category: 'infrastructure' });
+        }
+        if (cert.subjectAltNames) {
+            cert.subjectAltNames.forEach(san => {
+                if (!san.startsWith('*.')) {
+                    profile.entities.push({ type: 'domain', value: san, source: 'SSL SAN' });
+                }
+            });
+        }
+    }
+
+    if (sslData.issues) {
+        sslData.issues.forEach(issue => {
+            const severity = issue.includes('expired') || issue.includes('Self-signed') ? 'critical' : 'medium';
+            profile.riskFactors.push({ factor: 'SSL Issue', severity, description: issue });
+        });
+    }
+
+    if (sslData.grade && (sslData.grade === 'D' || sslData.grade === 'F')) {
+        profile.riskFactors.push({ factor: 'Poor SSL Configuration', severity: 'high', description: `SSL grade: ${sslData.grade}` });
+    }
+}
+
+function processHeadersForProfile(profile, headersData) {
+    if (headersData.checks) {
+        const missing = headersData.checks.filter(c => !c.present && !c.info);
+        if (missing.length >= 5) {
+            profile.riskFactors.push({ factor: 'Missing Security Headers', severity: 'high', description: `${missing.length} critical security headers not configured` });
+        } else if (missing.length >= 3) {
+            profile.riskFactors.push({ factor: 'Incomplete Security Headers', severity: 'medium', description: `${missing.length} security headers missing` });
+        }
+    }
+
+    if (headersData.serverInfo) {
+        if (headersData.serverInfo.server && headersData.serverInfo.server !== 'Not disclosed') {
+            profile.entities.push({ type: 'server', value: headersData.serverInfo.server, source: 'HTTP Headers' });
+        }
+        if (headersData.serverInfo.poweredBy && headersData.serverInfo.poweredBy !== 'Not disclosed') {
+            profile.riskFactors.push({ factor: 'Technology Disclosure', severity: 'low', description: `X-Powered-By: ${headersData.serverInfo.poweredBy}` });
+        }
+    }
+}
+
+function processTechForProfile(profile, techData) {
+    if (techData.detected) {
+        techData.detected.forEach(tech => {
+            profile.entities.push({ type: 'technology', value: tech.name, source: 'Tech Detection', category: tech.category });
+        });
+    }
 }
 
 module.exports = { generateProfile };
